@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Travel Planner - Summary</title>
+    <style>
+        /* Consistent styling with other pages */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+        }
+        header {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+        }
+        .container {
+            padding: 20px;
+        }
+        .summary-section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            font-size: 1.5em;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        h3 {
+            font-size: 1.2em;
+            color: #3a7bd5;
+            margin-bottom: 5px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .info-box {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .info-box p {
+            margin: 5px 0;
+            color: #555;
+            font-size: 1em;
+        }
+        .button {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 15px 25px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        .button:hover {
+            background-color: #2a5ba5;
+        }
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #777;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Your Trip Summary</h1>
+    </header>
+
+    <div class="container">
+        {% for i in range(itinerary.cities|length) %}
+        <!-- City Section -->
+        <div class="summary-section">
+            <h2>{{ itinerary.cities[i] }}</h2>
+
+            <!-- Hotel Information -->
+            {% if itinerary.cities[i] in hotels %}
+            <div class="info-box">
+                <h3>Selected Hotel</h3>
+                <p><strong>Name:</strong> {{ hotels[itinerary.cities[i]].name }}</p>
+                <p><strong>Address:</strong> {{ hotels[itinerary.cities[i]].address }}</p>
+                <p><strong>Rating:</strong> {{ hotels[itinerary.cities[i]].rating }} ({{ hotels[itinerary.cities[i]].stars }} stars)</p>
+                <p><strong>Cost:</strong> {{ hotels[itinerary.cities[i]].cost }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Selected Activities -->
+            {% if itinerary.cities[i] in saved_attractions %}
+            <div class="info-box">
+                <h3>Selected Activities in {{ itinerary.cities[i] }}</h3>
+                <ul>
+                {% for attraction in saved_attractions[itinerary.cities[i]].values() %}
+                    <li>
+                        <p><strong>Name:</strong> {{ attraction.name }}</p>
+                        <p><strong>Description:</strong> {{ attraction.description }}</p>
+                        <p><strong>Category:</strong> {{ attraction.category }}</p>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Transportation to Next City -->
+            {% if i < (itinerary.cities|length - 1) %}
+            <div class="info-box">
+                <h3>Transportation to {{ itinerary.cities[i + 1] }}</h3>
+                {% for leg in transport_info %}
+                    {% if leg.origin == itinerary.cities[i] and leg.destination == itinerary.cities[i + 1] %}
+                    <p><strong>Mode:</strong> {{ leg.mode.capitalize() }}</p>
+                    <p><strong>Cost:</strong> ${{ leg.cost }}</p>
+                    <p><strong>Carbon Emissions:</strong> {{ leg.emissions }} kg CO2</p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <!-- Total Cost and Emissions Section -->
+        <div class="summary-section">
+            <h2>Total Cost & Emissions</h2>
+            <p><strong>Total Transportation Cost:</strong> ${{ total_cost }}</p>
+            <p><strong>Total Carbon Emissions:</strong> {{ total_emissions }} kg CO2</p>
+        </div>
+
+        <!-- Make a New Itinerary Button -->
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{{ url_for('index') }}" class="button">Make a New Itinerary</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>Thank you for using our Travel Planner! We hope you have a wonderful trip.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Travel Planner - Winning Itinerary</title>
+    <style>
+        /* Your existing CSS styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+        }
+        header {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        h1, h2 {
+            margin: 0;
+        }
+        .done-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            background-color: #ff8c42;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .done-button:hover {
+            background-color: #e57a3b;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        .done-button:active {
+            background-color: #d06933;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            display: flex;
+            padding: 20px;
+        }
+        .main-block {
+            flex: 3;
+            background-color: white;
+            padding: 20px;
+            margin-right: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .side-blocks {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .city-block {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .city-block:hover {
+            background-color: #f0f0f0;
+        }
+        .city-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        .city-days {
+            font-size: 1em;
+            color: #777;
+        }
+        .city-notes {
+            margin-top: 15px;
+            line-height: 1.6;
+            color: #555;
+        }
+        .attractions-list h3 {
+            margin-top: 30px;
+            color: #333;
+        }
+        .attractions-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .attraction-item {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .attraction-item button {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            background-color: #3a7bd5;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .attraction-item button:hover {
+            background-color: #356ac3;
+        }
+        .prompt-box {
+            margin-top: 30px;
+        }
+        .prompt-box textarea {
+            width: 100%;
+            height: 60px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            resize: none;
+            font-size: 1em;
+        }
+        .prompt-box button {
+            margin-top: 10px;
+            background-color: #3a7bd5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .prompt-box button:hover {
+            background-color: #356ac3;
+        }
+        .saved-attractions {
+            margin-top: 30px;
+        }
+        .saved-attractions h3 {
+            color: #333;
+        }
+        .saved-attractions ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .saved-attraction-item {
+            background-color: #fff8e1;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #777;
+            font-size: 0.9em;
+        }
+
+        /* Loading Icon Styles */
+        .loading-icon {
+            margin: 20px auto;
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3a7bd5;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        const itinerary = {{ itinerary | tojson }};
+        let currentCityIndex = 0;
+        let savedAttractions = {};
+
+        function fetchSavedAttractions() {
+            fetch('/get_saved_attractions')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        savedAttractions = data.saved_attractions;
+                    } else {
+                        savedAttractions = {};
+                        alert('Failed to load saved attractions.');
+                    }
+                    displayCity(currentCityIndex);
+                    renderSideBlocks();
+                })
+                .catch(error => {
+                    console.error('Error fetching saved attractions:', error);
+                    savedAttractions = {};
+                    displayCity(currentCityIndex);
+                    renderSideBlocks();
+                });
+        }
+
+        function displayCity(index) {
+            currentCityIndex = index;
+            const city = itinerary.cities[currentCityIndex];
+            const day = itinerary.days[currentCityIndex];
+            const note = itinerary.notes[currentCityIndex];
+
+            document.getElementById('main-city-name').innerText = city;
+            document.getElementById('main-city-days').innerText = `${day} days`;
+            document.getElementById('main-city-notes').innerText = note;
+
+            fetchAttractions(city);
+            displaySavedAttractions();
+            renderSideBlocks(); // Refresh sidebar
+        }
+
+        function fetchAttractions(city, userPrompt = null) {
+            const attractionsContainer = document.getElementById('attractions-list');
+            // Display loading icon
+            attractionsContainer.innerHTML = '<div class="loading-icon"></div>';
+
+            const data = { 'city': city };
+            if (userPrompt) {
+                data['user_prompt'] = userPrompt;
+            }
+
+            fetch('/get_attractions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                attractionsContainer.innerHTML = '';  // Clear loading icon
+
+                if (data.success) {
+                    const attractions = data.attractions;
+                    if (attractions && attractions.length > 0) {
+                        const attractionsTitle = document.createElement('h3');
+                        attractionsTitle.innerText = 'Nearby Attractions Based on Your Preferences:';
+                        attractionsContainer.appendChild(attractionsTitle);
+
+                        const attractionsList = document.createElement('ul');
+                        attractions.forEach(attraction => {
+                            const listItem = document.createElement('li');
+                            listItem.className = 'attraction-item';
+                            listItem.innerHTML = `<strong>${attraction.name}</strong>: ${attraction.description}`;
+
+                            const saveButton = document.createElement('button');
+                            saveButton.innerText = 'Save';
+                            saveButton.onclick = (event) => saveAttraction(attraction, event);
+
+                            if (isAttractionSaved(attraction)) {
+                                saveButton.disabled = true;
+                                saveButton.innerText = 'Saved';
+                            }
+
+                            listItem.appendChild(saveButton);
+                            attractionsList.appendChild(listItem);
+                        });
+                        attractionsContainer.appendChild(attractionsList);
+                    } else {
+                        attractionsContainer.innerHTML = '<p>No attractions found.</p>';
+                    }
+                } else {
+                    attractionsContainer.innerHTML = `<p>Error: ${data.error}</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching attractions:', error);
+                attractionsContainer.innerHTML = '<p>Error fetching attractions.</p>';
+            });
+        }
+
+        function renderSideBlocks() {
+            const sideBlocksContainer = document.getElementById('side-blocks');
+            sideBlocksContainer.innerHTML = '';
+
+            itinerary.cities.forEach((city, index) => {
+                const cityBlock = document.createElement('div');
+                cityBlock.className = 'city-block';
+                cityBlock.innerHTML = `<div class="city-name">${city}</div><div class="city-days">${itinerary.days[index]} days</div>`;
+
+                if (index !== currentCityIndex) {
+                    cityBlock.onclick = () => displayCity(index);
+                } else {
+                    cityBlock.style.backgroundColor = '#e0e0e0';  // Highlight current city
+                }
+
+                sideBlocksContainer.appendChild(cityBlock);
+            });
+        }
+
+        function saveAttraction(attraction, event) {
+            const city = attraction.city;
+
+            fetch('/save_attraction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(attraction)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (!savedAttractions[city]) {
+                        savedAttractions[city] = {};
+                    }
+                    savedAttractions[city][attraction.name] = attraction;
+                    displaySavedAttractions();
+                    event.target.disabled = true;
+                    event.target.innerText = 'Saved';
+                } else {
+                    alert('Failed to save attraction: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving attraction:', error);
+                alert('An error occurred while saving the attraction.');
+            });
+        }
+
+        function isAttractionSaved(attraction) {
+            const city = attraction.city;
+            const key = attraction.name;
+            return savedAttractions[city] && savedAttractions[city][key];
+        }
+
+        function displaySavedAttractions() {
+            const savedContainer = document.getElementById('saved-attractions');
+            savedContainer.innerHTML = '';
+
+            const city = itinerary.cities[currentCityIndex];
+            const cityAttractions = savedAttractions[city];
+
+            if (cityAttractions && Object.keys(cityAttractions).length > 0) {
+                const savedTitle = document.createElement('h3');
+                savedTitle.innerText = `Your Saved Attractions in ${city}:`;
+                savedContainer.appendChild(savedTitle);
+
+                const savedList = document.createElement('ul');
+                Object.values(cityAttractions).forEach(attraction => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'saved-attraction-item';
+                    listItem.innerHTML = `<strong>${attraction.name}</strong>: ${attraction.description}`;
+                    savedList.appendChild(listItem);
+                });
+                savedContainer.appendChild(savedList);
+            }
+        }
+
+        function regenerateAttractions() {
+            const userPrompt = document.getElementById('user-prompt').value.trim();
+            if (userPrompt) {
+                const city = itinerary.cities[currentCityIndex];
+                fetchAttractions(city, userPrompt);
+            }
+        }
+
+        window.onload = fetchSavedAttractions;
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Sculpting Itinerary</h1>
+        <h2>{{ itinerary.name }}</h2>
+        <button class="done-button" onclick="window.location.href='/hotels'">Hotels</button>
+    </header>
+    <div class="container">
+        <div class="main-block">
+            <div class="city-name" id="main-city-name"></div>
+            <div class="city-days" id="main-city-days"></div>
+            <div class="city-notes" id="main-city-notes"></div>
+            <div class="attractions-list" id="attractions-list"></div>
+            <div class="prompt-box">
+                <h3>Refine Your Recommendations:</h3>
+                <textarea id="user-prompt" placeholder="e.g., Show me attractions suitable for kids"></textarea>
+                <button onclick="regenerateAttractions()">Regenerate Attractions</button>
+            </div>
+            <div class="saved-attractions" id="saved-attractions"></div>
+        </div>
+        <div class="side-blocks" id="side-blocks"></div>
+    </div>
+    <footer>
+        <p>Click on each city to explore more attractions and save your favorites.</p>
+    </footer>
+</body>
+</html>
+
+

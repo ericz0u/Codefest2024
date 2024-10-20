@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Co-Explore - Home</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <!-- Custom CSS (Optional) -->
+    <style>
+        body {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #333;
+        }
+        .form-container {
+            margin-top: 100px;
+            background: rgba(255,255,255,0.9);
+            padding: 40px;
+            border-radius: 10px;
+        }
+        h1 {
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8 form-container">
+                <h1 class="text-center">Welcome to Co-Explore</h1>
+                <form method="post">
+                    <div class="form-group">
+                        <label for="location">Choose a location:</label>
+                        <input type="text" class="form-control" id="location" name="location" placeholder="Enter your destination" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="people">Number of people planning:</label>
+                        <input type="number" class="form-control" id="people" name="people" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="duration">How long do you want to stay (in days)?</label>
+                        <input type="number" class="form-control" id="duration" name="duration" min="1" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Next</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</body>
+</html>

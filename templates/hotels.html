@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Travel Planner - Hotels</title>
+    <style>
+        /* Consistent styling with the existing itinerary page */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+        }
+        header {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        h1, h2 {
+            margin: 0;
+        }
+        .transport-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #ff8c42;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .transport-button:hover {
+            background-color: #e57a3b;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        .transport-button:active {
+            background-color: #d06933;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            padding: 20px;
+        }
+        .city-section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .hotels-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .hotel-item {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .hotel-item:hover {
+            background-color: #f0f0f0;
+        }
+        .hotel-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        .hotel-address, .hotel-rating, .hotel-cost {
+            font-size: 1em;
+            color: #777;
+            margin: 5px 0;
+        }
+        .select-hotel {
+            margin-top: 10px;
+        }
+        .select-hotel input {
+            margin-right: 5px;
+        }
+        button[type="submit"] {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+        }
+        button[type="submit"]:hover {
+            background-color: #356ac3;
+        }
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #777;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Recommended Hotels</h1>
+        <a href="{{ url_for('transportation') }}" class="transport-button">Transportation</a>
+    </header>
+
+    <div class="container">
+        {% if hotels_data %}
+            <form method="POST" action="{{ url_for('save_hotels') }}">
+                {% for city_data in hotels_data %}
+                <div class="city-section">
+                    <h2>{{ city_data.city_name }}</h2>
+                    <p>Optimal Location: {{ city_data.optimal_location }}</p>
+                    <h3>Hotels:</h3>
+                    <ul class="hotels-list">
+                        {% if city_data.hotels %}
+                            {% for hotel in city_data.hotels %}
+                            <li class="hotel-item">
+                                <div class="hotel-name">{{ hotel.name }}</div>
+                                <div class="hotel-address">{{ hotel.address }}</div>
+                                <div class="hotel-rating">Rating: {{ hotel.rating }} ({{ hotel.stars }} stars)</div>
+                                <div class="hotel-cost">Cost: {{ hotel.cost }}</div>
+                                <div class="select-hotel">
+                                    <input type="radio" name="selected_hotel_{{ city_data.city_name }}" value="{{ loop.index0 }}" required>
+                                    Select this hotel
+                                </div>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="hotel-item">No hotels found for this city.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endfor %}
+                <button type="submit">Save Selected Hotels</button>
+            </form>
+        {% else %}
+            <div class="city-section">
+                <h2>No hotel data available.</h2>
+                <p>Please try again later or adjust your search criteria.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        <p>Select your preferred hotels for each city, then save your choices.</p>
+    </footer>
+</body>
+</html>
+

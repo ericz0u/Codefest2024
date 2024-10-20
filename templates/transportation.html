@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Travel Planner - Transportation</title>
+    <style>
+        /* Consistent styling with the existing itinerary and hotels pages */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+        }
+        header {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        h1, h2 {
+            margin: 0;
+        }
+        .container {
+            padding: 20px;
+        }
+        .transport-leg {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            font-size: 1.5em;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .transport-option {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .transport-option:hover {
+            background-color: #f0f0f0;
+        }
+        .transport-option input {
+            margin-right: 10px;
+        }
+        .transport-option label {
+            font-size: 1em;
+            color: #333;
+        }
+        button[type="submit"] {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        button[type="submit"]:hover {
+            background-color: #356ac3;
+        }
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #777;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Select Transportation Modes</h1>
+    </header>
+
+    <div class="container">
+        <form method="POST">
+            {% for leg in transport_options %}
+            {% set leg_index = loop.index0 %}
+            <div class="transport-leg">
+                <h2>{{ leg.origin }} to {{ leg.destination }}</h2>
+                {% for option in leg.options %}
+                <div class="transport-option">
+                    <input type="radio" name="transport_mode_{{ leg_index }}" value="{{ option.mode }}" required>
+                    <label>
+                        {{ option.mode.capitalize() }} -
+                        Time:
+                        {% if option.time is string and '-' in option.time %}
+                            {{ (option.time.split('-')|map('float')|sum / 2)|round(1) }}
+                        {% else %}
+                            {{ option.time }}
+                        {% endif %} hours,
+                        Cost:
+                        {% if option.cost is string and '-' in option.cost %}
+                            ${{ (option.cost.split('-')|map('float')|sum / 2)|round(2) }}
+                        {% else %}
+                            ${{ option.cost }}
+                        {% endif %},
+                        Emissions:
+                        {% if option.emissions is string and '-' in option.emissions %}
+                            {{ (option.emissions.split('-')|map('float')|sum / 2)|round(1) }}
+                        {% else %}
+                            {{ option.emissions }}
+                        {% endif %} kg CO2
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit">Continue</button>
+        </form>
+    </div>
+
+    <footer>
+        <p>Select your preferred mode of transportation for each leg of your journey.</p>
+    </footer>
+</body>
+</html>

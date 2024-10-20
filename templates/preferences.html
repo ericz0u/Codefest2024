@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Travel Planner - Preferences</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Include Bootstrap CSS from CDN -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h1 class="text-center mb-5">Enter Preferences</h1>
+    <form method="post" id="preferences-form">
+        {% for i in range(people) %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">Person {{ i+1 }}</h3>
+                    <div class="form-group">
+                        <label for="preference-{{ i }}">Preferences for your trip to {{ session['location'] }}:</label>
+                        <input type="text" id="preference-{{ i }}" name="preference" class="form-control form-control-lg" required>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg">Get Itineraries</button>
+        </div>
+    </form>
+</div>
+
+<!-- Include Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Updated JS code with loading screen handling
+    document.getElementById('preferences-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // Collect preferences into an array
+        const preferences = [];
+        const inputs = document.querySelectorAll('input[name="preference"]');
+        inputs.forEach(input => {
+            if (input.value.trim() !== '') {
+                preferences.push(input.value.trim());
+            }
+        });
+
+        // If no preferences were entered, alert the user
+        if (preferences.length === 0) {
+            alert('Please enter at least one preference.');
+            return;
+        }
+
+        // Show the loading screen
+        document.getElementById('loading-screen').style.display = 'block';
+        document.querySelector('.container').style.display = 'none';
+
+        // Submit the form data using fetch
+        fetch('/preferences', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ preferences: preferences })
+        })
+        .then(response => {
+            if (response.redirected) {
+                // Redirect to the next page (itineraries)
+                window.location.href = response.url;
+            } else {
+                alert('Failed to submit preferences. Please try again.');
+                document.getElementById('loading-screen').style.display = 'none';
+                document.querySelector('.container').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting preferences:', error);
+            alert('An error occurred while submitting preferences.');
+            document.getElementById('loading-screen').style.display = 'none';
+            document.querySelector('.container').style.display = 'block';
+        });
+    });
+</script>
+
+<!-- Loading screen div -->
+<div id="loading-screen" style="display: none;">
+    <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+        <div class="text-center">
+            <div class="spinner-border" role="status" style="width: 3rem; height: 3rem;">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <h2 class="mt-3">Generating Itineraries...</h2>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
