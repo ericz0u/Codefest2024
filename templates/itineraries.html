@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Travel Planner - Itineraries</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+        }
+        header {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        h1, h2, h3 {
+            margin: 0;
+            color: #333;
+        }
+        .container {
+            margin: 20px;
+        }
+        .primary-itinerary, .secondary-itinerary {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease; /* Smooth resizing */
+        }
+        .primary-itinerary {
+            flex: 2; /* Larger size for primary itinerary */
+            transform: scale(1.05); /* Slightly larger */
+        }
+        .secondary-itineraries {
+            display: flex;
+            gap: 20px;
+        }
+        .secondary-itinerary {
+            flex: 1; /* Smaller size for secondary itineraries */
+            cursor: pointer;
+        }
+        .secondary-itinerary:hover {
+            background-color: #f0f0f0;
+        }
+        .itinerary-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .itinerary-list li {
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        button:hover {
+            background-color: #356ac3;
+        }
+        textarea {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #777;
+            font-size: 0.9em;
+        }
+        /* Spinner styles */
+        .spinner {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #3a7bd5; /* Blue */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto; /* Center horizontally */
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .secondary-itineraries {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Select an Itinerary</h1>
+    </header>
+
+    <div class="container">
+        <form id="itinerary-form" method="post">
+            <!-- Primary Itinerary -->
+            <div class="primary-itinerary" id="primary-itinerary">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <!-- Secondary Itineraries -->
+            <div class="secondary-itineraries" id="secondary-itineraries">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <input type="hidden" name="selected_itinerary" id="selected_itinerary" value="0">
+        </form>
+    </div>
+
+    <footer>
+        <p>Select your preferred itinerary for your journey.</p>
+    </footer>
+
+    <script>
+        const itineraries = {{ itineraries|tojson }};
+        const zipLongest = function(a, b, c) {
+            let length = Math.max(a.length, b.length, c ? c.length : 0);
+            let result = [];
+            for (let i = 0; i < length; i++) {
+                result.push([a[i], b[i], c ? c[i] : undefined]);
+            }
+            return result;
+        };
+
+        let selectedItineraryIndex = 0;
+
+        function renderPrimaryItinerary() {
+            const itinerary = itineraries[selectedItineraryIndex];
+            const primaryDiv = document.getElementById('primary-itinerary');
+            primaryDiv.innerHTML = '';
+
+            const h2 = document.createElement('h2');
+            h2.textContent = itinerary.name;
+            primaryDiv.appendChild(h2);
+
+            const ul = document.createElement('ul');
+            ul.className = 'itinerary-list';
+
+            const zipped = zipLongest(itinerary.cities, itinerary.days, itinerary.notes);
+            for (let i = 0; i < zipped.length; i++) {
+                const [city, day, note] = zipped[i];
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${city} - ${day} days</strong>`;
+                if (note) {
+                    const p = document.createElement('p');
+                    p.textContent = `Notes: ${note}`;
+                    li.appendChild(p);
+                }
+                ul.appendChild(li);
+            }
+            primaryDiv.appendChild(ul);
+
+            const suggestionDiv = document.createElement('div');
+            const h3 = document.createElement('h3');
+            h3.textContent = 'Make Suggestions';
+            suggestionDiv.appendChild(h3);
+
+            const textarea = document.createElement('textarea');
+            textarea.id = 'suggestions';
+            textarea.rows = 4;
+            textarea.placeholder = 'Enter your suggestions here...';
+            suggestionDiv.appendChild(textarea);
+
+            const regenButton = document.createElement('button');
+            regenButton.type = 'button';
+            regenButton.id = 'regenerate-button';
+            regenButton.textContent = 'Regenerate Itinerary';
+            suggestionDiv.appendChild(regenButton);
+
+            const voteButton = document.createElement('button');
+            voteButton.type = 'button';
+            voteButton.textContent = 'This One!';
+            voteButton.onclick = submitSelection;
+            suggestionDiv.appendChild(voteButton);
+
+            // Create spinner
+            const spinner = document.createElement('div');
+            spinner.className = 'spinner';
+            spinner.id = 'loading-spinner';
+            suggestionDiv.appendChild(spinner);
+
+            primaryDiv.appendChild(suggestionDiv);
+
+            document.getElementById('selected_itinerary').value = selectedItineraryIndex;
+
+            regenButton.addEventListener('click', function() {
+                const suggestions = textarea.value;
+                if (suggestions.trim() === '') {
+                    alert('Please enter your suggestions.');
+                    return;
+                }
+
+                const spinner = document.getElementById('loading-spinner');
+                spinner.style.display = 'block'; // Show spinner
+
+                fetch('/regenerate_itinerary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        itinerary_index: selectedItineraryIndex,
+                        suggestions: suggestions
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    spinner.style.display = 'none'; // Hide spinner
+                    if (data.success) {
+                        itineraries[selectedItineraryIndex] = data.new_itinerary;
+                        renderPrimaryItinerary();
+                        alert('Itinerary regenerated based on your suggestions.');
+                    } else {
+                        alert('Failed to regenerate itinerary: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    spinner.style.display = 'none'; // Hide spinner
+                    console.error('Error:', error);
+                    alert('An error occurred while regenerating the itinerary.');
+                });
+            });
+        }
+
+        function renderSecondaryItineraries() {
+            const secondaryDiv = document.getElementById('secondary-itineraries');
+            secondaryDiv.innerHTML = '';
+            for (let i = 0; i < itineraries.length; i++) {
+                if (i === selectedItineraryIndex) continue;
+                const itinerary = itineraries[i];
+                const div = document.createElement('div');
+                div.className = 'secondary-itinerary';
+                div.setAttribute('data-index', i);
+
+                const h3 = document.createElement('h3');
+                h3.textContent = itinerary.name;
+                div.appendChild(h3);
+
+                const ul = document.createElement('ul');
+                ul.className = 'itinerary-list';
+                const zipped = zipLongest(itinerary.cities, itinerary.days);
+                for (let j = 0; j < zipped.length; j++) {
+                    const [city, day] = zipped[j];
+                    const li = document.createElement('li');
+                    li.innerHTML = `${city} - ${day} days`;
+                    ul.appendChild(li);
+                }
+                div.appendChild(ul);
+
+                secondaryDiv.appendChild(div);
+            }
+
+            document.querySelectorAll('.secondary-itinerary').forEach(function(elem) {
+                elem.addEventListener('click', function() {
+                    const newIndex = parseInt(this.getAttribute('data-index'));
+                    if (newIndex !== selectedItineraryIndex) {
+                        selectedItineraryIndex = newIndex;
+                        switchItineraryView();
+                    }
+                });
+            });
+        }
+
+        function switchItineraryView() {
+            renderPrimaryItinerary();
+            renderSecondaryItineraries();
+        }
+
+        function submitSelection() {
+            document.getElementById('selected_itinerary').value = selectedItineraryIndex;
+            document.getElementById('itinerary-form').submit();
+        }
+
+        renderPrimaryItinerary();
+        renderSecondaryItineraries();
+    </script>
+</body>
+</html>
+
+
